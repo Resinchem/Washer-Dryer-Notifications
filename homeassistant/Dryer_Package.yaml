@@ -1,0 +1,206 @@
+# ==========================================
+#  HOME ASSISTANT DRYER NOTIFICATION PACKAGE
+# ==========================================
+#  Home Assistant package for Dryer notifications.  If not using packages
+#  each section or entity type should be split out and placed into the 
+#  proper location within your split or configuration.yaml file(s).
+#
+#  It assumes that you have created a start cycle and end cycle sensor
+#  that utilizes the ESPHome code in this repository.
+#
+#  If not using MQTT, you can substitute an input text helper for the
+#  dryer state.  This option is shown in the blog: 
+#  https://resinchemtech.blogspot.com/2024/01/washer-dryer-updated.html
+#  and in commented-out code below
+# =====================================================================
+
+# ---------------------
+#  Sensors and Helpers
+# ---------------------
+mqtt:
+  sensor:
+    # ---------------------------------
+    #  Dryer state - set via automation
+    # ---------------------------------
+    - name: "Dryer State"
+      state_topic: "hass/state/dryer"
+      icon: mdi:tumble-dryer
+
+# Substitute an input text helper for the MQTT sensor above if not using MQTT
+# Remove the mqtt section above and uncomment the following two lines:
+
+#input_text:
+#  dryer_state
+
+input_number:
+  # Threshold value adjustments for illuminance sensor (BH1750)
+  # used by ESPHome to determine whether indicator is off/on
+  dryer_start_cycle_threshold:
+    min: 0
+    max: 1000
+    step: 10
+    
+  dryer_end_cycle_threshold:
+    min: 0
+    max: 1000
+    step: 10
+
+timer:
+  # Timer for max dryer cycle time (in case manually stopped before completion)
+  dryer_cycle:
+
+input_boolean:
+  notify_dryer:
+    name: Dryer Notifications
+    initial: on
+    icon: mdi:account-voice
+
+# -------------------
+#  AUTOMATIONS
+# -------------------
+automation: 
+  # Dryer Start Cycle
+  - alias: "Dryer Start"
+    trigger: 
+      platform: state
+      entity_id: binary_sensor.dryer_cycle_start_indicator
+      from: 'off'
+      to: 'on'
+    condition:
+      condition: template
+      value_template: "{{ not is_state('sensor.dryer_state', 'Drying') }}"
+      # for non-MQTT, replace 'sensor.dryer_state' with 'text_input.dryer_state' above 
+    action:
+      - service: mqtt.publish
+        data:
+          topic: hass/state/dryer
+          payload: 'Drying'
+          retain: 'true'
+    # -----------------------------------
+    # If not using MQTT, create a dryer_state 
+    # text input helper and replace
+    # the above service call with this one:
+    # -----------------------------------
+    # - service: input_text.set_value
+    #   target:
+    #     entity_id: input_text.dryer_state
+    #   data:
+    #     value: "Drying"    
+    # -------------------------------------
+     # Start 1 hour timer in case cycle stopped before complete
+      - service: timer.start
+        data:
+          entity_id: timer.dryer_cycle
+          duration: '01:00:00'
+
+  # Dryer End Cycle
+  - alias: "Dryer Finished"
+    trigger:
+      platform: state
+      entity_id: binary_sensor.dryer_cycle_end_indicator
+      from: "off"
+      to: "on"
+    condition:
+      condition: template
+      value_template: "{{ is_state('sensor.dryer_state', 'Drying') }}"
+      # for non-MQTT, replace 'sensor.dryer_state' with 'text_input.dryer_state' above 
+    action:
+      - service: mqtt.publish
+        data:
+          topic: hass/state/dryer
+          payload: 'Finished'
+          retain: 'true'
+    # -----------------------------------
+    # If not using MQTT, create a dryer_state 
+    # text input helper and replace
+    # the above service call with this one:
+    # -----------------------------------
+    # - service: input_text.set_value
+    #   target:
+    #     entity_id: input_text.dryer_state
+    #   data:
+    #     value: "Finished"    
+    # -------------------------------------
+
+  - alias: "Dryer Idle"
+    # Default to Idle status if neither indicator on and state <> drying
+    # This would normally fire when the dryer door is opened after the
+    # cycle is complete and the cycle complete indicator turns off.
+    trigger: 
+      platform: state
+      entity_id: binary_sensor.dryer_cycle_end_indicator
+      from: "on"
+      to: "off"
+    condition:
+      - condition: state
+        entity_id: binary_sensor.dryer_cycle_start_indicator
+        state: "off"
+      - condition: template
+        value_template: "{{ not is_state('sensor.dryer_state', 'Drying') }}"
+        # for non-MQTT, replace 'sensor.dryer_state' with 'text_input.dryer_state' above 
+    action:
+      - service: mqtt.publish
+        data:
+          topic: hass/state/dryer
+          payload: "Idle"
+          retain: 'true'
+    # -----------------------------------
+    # If not using MQTT, create a dryer_state 
+    # text input helper and replace
+    # the above service call with this one:
+    # -----------------------------------
+    # - service: input_text.set_value
+    #   target:
+    #     entity_id: input_text.dryer_state
+    #   data:
+    #     value: "Idle"    
+    # -------------------------------------
+
+  - alias: "Dryer Cycle Time Expired"
+    # If manually stopped, reset status to Idle after max time
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.dryer_cycle
+    action:
+      - service: mqtt.publish
+        data:
+          topic: hass/state/dryer
+          payload: "Idle"
+          retain: "true"
+    # -----------------------------------
+    # If not using MQTT, create a dryer_state 
+    # text input helper and replace
+    # the above service call with this one:
+    # -----------------------------------
+    # - service: input_text.set_value
+    #   target:
+    #     entity_id: input_text.dryer_state
+    #   data:
+    #     value: "Idle"    
+    # -------------------------------------
+
+
+  # ------------------------------
+  #  Voice Notifications
+  # ------------------------------
+  - alias: "Dryer Announce"
+    trigger:
+      platform: state
+      entity_id: sensor.dryer_state 
+      # If not using MQTT, substitute the above entity_id line with this one:
+      # entity_id: text_input.dryer_state
+      from: 'Drying'
+      to: 'Finished'
+    condition:
+      # Check that voice notifications aren't snoozed or in night mode
+      - condition: state
+        entity_id: input_boolean.notify_dryer
+        state: 'on'
+    action:
+      - service: tts.google_say
+        entity_id:
+          - media_player.all_home_devices  #substitute your media_player name(s)
+        data_template:
+           message: "Your clothes are dry. Whoop! whoop!"

@@ -1,0 +1,117 @@
+esphome:
+  name: dryer-cycle-start
+  friendly_name: dryer-cycle-start
+
+esp8266:
+  board: d1_mini
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "your-auto-generated-encryption-key-here"  #do not copy/paste this line!
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Dryer-Cycle-Start"
+    password: !secret ap_password
+
+captive_portal:
+
+# ====================================================================
+#  You should be create a new ESPHome node that will auto-generate
+#  all of the above lines.  You may need to change the board type.
+#  Then add the following to this new node, changing names as desired.
+# ====================================================================  
+
+i2c:
+  scan: true
+
+# Virtual Binary Sensor based on Illuminance above or below threshold
+binary_sensor:
+  - platform: template
+    name: "Dryer Start Cycle Indicator"
+    id: start_cycle_light
+    device_class: light
+
+sensor:
+# Import Home Assistant Input Number Threshold
+  - platform: homeassistant
+    name: "Start Cycle Threshold"
+    id: "start_threshold"
+    entity_id: input_number.dryer_start_cycle_threshold
+
+  - platform: bh1750
+    name: "Dryer Start Cycle Illuminance"
+    id: "BH1750_start_lx"
+    address: 0x23
+    update_interval: 5s
+    # -----------------------------------------------------------------------
+    # Uncomment the following 'internal' line if don't want lux values in Home Assistant
+    # which will record a value once every 5 seconds.  Alternatively, you can leave this
+    # commanted out to get lux values but exclude the entity from recording history via 
+    # the recorder settings (recommended if not enabling the 'internal' setting)
+    # -----------------------------------------------------------------------
+  # internal: true          
+    filters:
+      # The lambda section will set the above binary_sensor to on/off based on whether
+      # the measure luminance is above/below the input_number threshold
+      - lambda: !lambda |-
+          if (x <= id(start_threshold).state ) {
+            if (id(start_cycle_light).state == false) {
+              //Light is already off
+              return x;
+            }
+            //Light from on to off
+            id(start_cycle_light).publish_state(false);
+            return x;
+          } else {
+            if (id(start_cycle_light).state == true) {
+            //Light is already on
+            return x;
+            }
+            id(start_cycle_light).publish_state(true);
+            return x;
+          }
+
+# ================================================
+#  Optional Entities to get last boot time stamp
+#  and to create a reboot button in Home Assistant
+# ================================================
+
+# current date/time
+time:
+  - platform: homeassistant
+    id: esptime
+    on_time_sync:
+      then:
+        - lambda: !lambda |-
+            static boolean bootTimeSet = false;
+            if (!bootTimeSet) {
+              auto now = id(esptime).now();
+              char buffer[20];
+              now.strftime(buffer, sizeof(buffer), "%Y-%m-%dT%H:%M:%S");
+              id(dryer_start_boot_time).publish_state(buffer);
+              bootTimeSet = true;
+            }
+
+# text sensor with last boot time stamp
+text_sensor:
+  - platform: template
+    name: "Dryer Start Cycle Sensor Last Boot"
+    id: dryer_start_boot_time
+    icon: mdi:clock-start
+
+# Remote restart button
+button:
+  - platform: restart
+    name: "Dryer Start Cycle Sensor Restart"

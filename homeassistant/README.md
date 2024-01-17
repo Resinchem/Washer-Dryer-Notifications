@@ -3,6 +3,8 @@ The Washer and Dryer files provided here are Home Assistant Package files.  A pa
 
 If you are not using packages, then each 'domain' or top level entity type must be split out of the package and placed in the proper location.  For example, input_text entities listed in the package, must be moved or placed under your input_text section of the configuration.yaml (or in your input_text file if using split configuration).  Automations must be moved to your automation section (or recreated using the UI editor), etc.
 
+**Note**: While these packages are YAML, you can create all the helpers and automations in Home Assistant using the UI editor instead of YAML.  The [written guide](https://resinchemtech.blogspot.com/2024/01/washer-dryer-updated.html) shows a few examples but if you need further assistance on how to take a YAML file and recreate it using the UI, you can watch this video: [Home Assistant 101: Recreate a YAML automation using the UI Automation Editor](https://youtu.be/F3YjWCs7Czc)
+
 ### Recommended Use:
 
 The washer package utlizes an energy-monitoring smart plug to report real time wattage use from the washer.  While my particular project uses a Sonoff S31 with Tasmota, any smart plug that integrates into Home Assistant (native or cloud based) should work.  The package does not include any integration details (such as manual MQTT integration), but assumes you have an integrated smart plug with watts being reports.  Change the entity names in the package as necessary.
