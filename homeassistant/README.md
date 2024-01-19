@@ -7,7 +7,7 @@ If you are not using packages, then each 'domain' or top level entity type must 
 
 ### Recommended Use:
 
-The washer package utlizes an energy-monitoring smart plug to report real time wattage use from the washer.  While my particular project uses a Sonoff S31 with Tasmota, any smart plug that integrates into Home Assistant (native or cloud based) should work.  The package does not include any integration details (such as manual MQTT integration), but assumes you have an integrated smart plug with watts being reports.  Change the entity names in the package as necessary.
+The washer package utlizes an energy-monitoring smart plug to report real time wattage use from the washer.  While my particular project uses a Sonoff S31 with Tasmota, any smart plug that integrates into Home Assistant (native or cloud based) should work.  The package does not include any integration details (such as manual MQTT integration), but assumes you have an integrated smart plug with watts being reported.  Change the entity names in the package as necessary.
 
 The dryer package uses a DIY built light level sensor to detect indicator lights on the front panel of the dryer to determine when the cycle starts and ends.  This sensor utilizes ESPHome and the code/configuration for these sensors can be found in the /esphome folder.
 
