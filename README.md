@@ -9,7 +9,7 @@
 
 Please see the following for more information and/or build details:
 
-- YouTube: << LINK >>
+- YouTube: [Improved Dryer Notifications for Home Assistant](https://youtu.be/P5Xm-LPHFRY)
 - Written Guide: [Washer and [updated] Dryer Notifications](https://resinchemtech.blogspot.com/2024/01/washer-dryer-updated.html)
 
 The information provided here is for reference only!  It is highly likely that it will need modification for your particular Home Assistant installation.  Please see the links above for more information.
