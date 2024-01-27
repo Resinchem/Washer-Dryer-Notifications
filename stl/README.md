@@ -7,4 +7,4 @@ They are designed for the GY-302 breakout board and a Wemos D1 Mini.  Use of oth
 These were printed using PLA with supports.  Do note that minimal support material should be used for the 'slot' that holds the GY-302, as this support material can be a challenge to remove after printing.
 
 
-_Please see the vidoe or written guides listed on the main page for more info on use and how these configuratios work._
+_Please see the video or written guides listed on the main page for more info on use and how these configuratios work._
