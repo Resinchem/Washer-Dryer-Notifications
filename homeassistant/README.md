@@ -13,4 +13,4 @@ The dryer package uses a DIY built light level sensor to detect indicator lights
 
 While it may be possible to copy/paste sections of my examples into your Home Assistant, the primary purpose is to proivde my version as a reference for creating your own versions. 
 
-_Please see the vidoe or written guides listed on the main page for more info on use and how these configuratios work._
+_Please see the video or written guides listed on the main page for more info on use and how these configuratios work._
