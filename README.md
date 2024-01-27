@@ -1,6 +1,7 @@
 ## Washer and Dryer Voice Notifications for Home Assistant
 
-<< INSERT THUMB_02 >>
+![Readme_Thumb_3_Small](https://github.com/Resinchem/ESP-Parking-Assistant/assets/55962781/246914f9-4377-4b2a-890d-28a0185ea356)
+
 
 ### Contents: 
 - ESPHome code for creating light level sensors, used to detect indicator lights on dryer as a trigger for automations.
